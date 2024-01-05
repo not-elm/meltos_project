@@ -4,3 +4,6 @@
 [submodule "meltos_ts_lib"]
 	path = meltos_ts_lib
 	url = https://github.com/MlUlM/meltos_ts_lib
+[submodule "meltos_vscode"]
+	path = meltos_vscode
+	url = https://github.com/not-elm/meltos_vscode
