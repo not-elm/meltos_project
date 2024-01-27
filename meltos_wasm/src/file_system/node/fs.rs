@@ -1,5 +1,7 @@
+use meltos_util::console_log;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::wasm_bindgen;
+
 use crate::file_system::node::error::NodeFsResult;
 use crate::file_system::node::MkdirOptions;
 use crate::file_system::node::stats::Stats;
@@ -44,8 +46,15 @@ pub fn exists_sync(path: &str) -> std::io::Result<bool> {
 }
 
 pub fn read_dir_sync(path: &str) -> std::io::Result<Option<Vec<String>>> {
+    console_log!("read_dir_sync: {path}");
+    if !exists_sync(path)? {
+        return Ok(None);
+    }
+
     match _read_dir_sync(path, JsValue::null()) {
-        Ok(entries) => Ok(Some(entries)),
+        Ok(entries) => {
+            Ok(Some(entries))
+        }
         Err(e) => Err(std::io::Error::other(format!("failed read dir: {e:?}"))),
     }
 }
@@ -73,4 +82,20 @@ pub fn lstat_sync(path: &str) -> std::io::Result<Stats> {
 #[inline]
 pub fn is_file(path: &str) -> std::io::Result<bool> {
     Ok(lstat_sync(path)?.is_file())
+}
+
+pub fn rm_recursive(path: String) -> std::io::Result<()> {
+    if !exists_sync(&path)? {
+        Ok(())
+    } else if is_file(&path)? {
+        rm_sync(&path)
+    } else if let Some(entries) = read_dir_sync(&path)? {
+        for entry in entries {
+            rm_recursive(format!("{path}/{entry}"))?;
+        }
+        rm_dir_sync(&path).map_err(|e| std::io::Error::other(format!("failed fs.rmdirSync : {e:?}")))?;
+        Ok(())
+    } else {
+        Ok(())
+    }
 }
