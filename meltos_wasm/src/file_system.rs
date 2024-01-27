@@ -132,7 +132,7 @@ impl Default for WasmFileSystem {
     fn default() -> Self {
         Self {
             //TODO: Repository URI
-            repository: NodeFileSystem::new("C://tmp".to_string()),
+            repository: NodeFileSystem::new("/home/elm/workspace/test".to_string()),
             workspace: MemoryFileSystem::default(),
             vscode: None,
         }
@@ -142,7 +142,7 @@ impl Default for WasmFileSystem {
 
 impl WasmFileSystem {
     fn fs(&self, path: &str) -> &dyn FileSystem {
-        if path.starts_with(".meltos") ||
+        if path.starts_with("/.meltos") ||
             path.starts_with("./.meltos") ||
             path.starts_with("/.meltos") {
             &self.repository

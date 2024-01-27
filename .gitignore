@@ -3,3 +3,6 @@
 **/*/resources/**/*
 **/target/**
 target/
+build/
+dist/
+
