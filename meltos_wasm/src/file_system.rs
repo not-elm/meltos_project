@@ -115,14 +115,41 @@ impl FileSystem for WasmFileSystem {
 
     #[inline(always)]
     async fn read_dir(&self, path: &str) -> std::io::Result<Option<Vec<String>>> {
-        self.fs(path).read_dir(path).await
+        if path == "." {
+            let entries = self.workspace.read_dir(".").await?;
+            let entries2 = self.repository.read_dir(".").await?;
+            if entries.is_none() && entries2.is_none() {
+                return Ok(None);
+            }
+            let mut e = entries.unwrap_or_default();
+            e.extend(entries2.unwrap_or_default());
+            Ok(Some(e))
+        } else {
+            self.fs(path).read_dir(path).await
+        }
     }
 
     #[inline(always)]
     async fn delete(&self, path: &str) -> std::io::Result<()> {
-        self.fs(path).delete(path).await?;
+        if path == "." {
+            self.repository.delete(".").await?;
+            self.workspace.delete(".").await?;
+        } else {
+            self.fs(path).delete(path).await?;
+        }
+
         self.notify(path, DELETE);
         Ok(())
+    }
+
+    async fn all_files_in(&self, path: &str) -> std::io::Result<Vec<String>> {
+        if path == "." {
+            let mut files = self.repository.all_files_in(".").await?;
+            files.extend(self.workspace.all_files_in(".").await?);
+            Ok(files)
+        } else {
+            self.fs(path).all_files_in(path).await
+        }
     }
 }
 
@@ -142,12 +169,10 @@ impl Default for WasmFileSystem {
 
 impl WasmFileSystem {
     fn fs(&self, path: &str) -> &dyn FileSystem {
-        if path.starts_with("/.meltos") ||
-            path.starts_with("./.meltos") ||
-            path.starts_with("/.meltos") {
-            &self.repository
-        } else {
+        if path.starts_with("workspace") || path.starts_with("/workspace") {
             &self.workspace
+        } else {
+            &self.repository
         }
     }
 

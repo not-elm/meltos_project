@@ -17,7 +17,7 @@ mod stats;
 mod fs;
 
 #[wasm_bindgen(getter_with_clone)]
-#[derive(Default, Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct NodeFileSystem {
     pub workspace_folder: String,
 }
@@ -32,45 +32,24 @@ impl NodeFileSystem {
     }
 
     #[inline]
-    pub fn path(&self, path: &str) -> String {
+    fn path(&self, path: &str) -> String {
         if path == "./" || path == "." {
             self.workspace_folder.clone()
         } else if path.starts_with(&self.workspace_folder) {
             path.to_string()
         } else {
-            format!("{}/{}", self.workspace_folder, path.replace("./", ""))
+            format!("{}/{}", self.workspace_folder, path.replace("", ""))
         }
     }
+}
 
-    // #[inline(always)]
-    // pub async fn create_dir_api(&self, path: &str) -> JsResult<()> {
-    //     self.create_dir(path).await.into_js_result()
-    // }
-    //
-    // #[inline(always)]
-    // pub async fn write_file_api(&self, path: &str, buf: Vec<u8>) -> JsResult<()> {
-    //     self.write_file(path, &buf).await.into_js_result()
-    // }
-    //
-    // #[inline(always)]
-    // pub async fn read_dir_api(&self, path: &str) -> JsResult<Option<Vec<String>>> {
-    //     self.read_dir(path).await.into_js_result()
-    // }
-    //
-    // #[inline(always)]
-    // pub async fn read_file_api(&self, path: &str) -> JsResult<Option<Vec<u8>>> {
-    //     self.read_file(path).await.into_js_result()
-    // }
-    //
-    // #[inline(always)]
-    // pub async fn delete_api(&self, path: &str) -> JsResult<()> {
-    //     self.delete(path).await.into_js_result()
-    // }
-    //
-    // #[inline(always)]
-    // pub async fn stat_api(&self, path: &str) -> JsResult<Option<Stat>> {
-    //     Ok(self.stat(path).await.into_js_result()?);
-    // }
+
+impl Default for NodeFileSystem {
+    fn default() -> Self {
+        Self{
+            workspace_folder: "/home/work".to_string()
+        }
+    }
 }
 
 impl NodeFileSystem {
