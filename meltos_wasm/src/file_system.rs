@@ -159,7 +159,7 @@ impl Default for WasmFileSystem {
     fn default() -> Self {
         Self {
             //TODO: Repository URI
-            repository: NodeFileSystem::new("/home/elm/workspace/test".to_string()),
+            repository: NodeFileSystem::default(),
             workspace: MemoryFileSystem::default(),
             vscode: None,
         }

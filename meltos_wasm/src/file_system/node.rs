@@ -2,6 +2,7 @@ use std::path::Path;
 
 use async_trait::async_trait;
 use meltos_tvc::file_system::{FileSystem, Stat, StatType};
+use meltos_util::console_log;
 use meltos_util::path::AsUri;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -51,7 +52,7 @@ impl Default for NodeFileSystem {
                 recursive: true
             }).unwrap();
         }
-
+        console_log!("home dir = {dir}");
         Self {
             workspace_folder: dir
         }
