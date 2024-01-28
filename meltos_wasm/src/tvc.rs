@@ -1,18 +1,18 @@
 use std::panic;
-use wasm_bindgen::prelude::wasm_bindgen;
 
 use meltos::user::UserId;
 use meltos_client::config::SessionConfigs;
+use meltos_client::error;
 use meltos_client::error::JsResult;
 use meltos_client::tvc::TvcClient;
 use meltos_tvc::branch::BranchName;
 use meltos_tvc::file_system::FilePath;
 use meltos_tvc::object::commit::CommitHash;
 use meltos_tvc::object::ObjHash;
+use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::file_system::WasmFileSystem;
 use crate::js_vec::{JsVecBranchCommitMeta, JsVecString};
-use crate::vscode::FileChangeEventEmitter;
 
 #[wasm_bindgen(getter_with_clone)]
 #[derive(Clone)]
@@ -24,12 +24,12 @@ pub struct WasmTvcClient {
 #[wasm_bindgen]
 impl WasmTvcClient {
     #[wasm_bindgen(constructor)]
-    pub fn new(vscode_file_system: Option<FileChangeEventEmitter>) -> Self {
+    pub fn new(fs: &WasmFileSystem) -> Self {
         panic::set_hook(Box::new(console_error_panic_hook::hook));
-        let fs = WasmFileSystem::new(vscode_file_system);
+
         Self {
             tvc: TvcClient::new(fs.clone()),
-            fs,
+            fs: fs.clone(),
         }
     }
 
@@ -42,6 +42,17 @@ impl WasmTvcClient {
     pub async fn init_repository(&self, branch_name: String) -> JsResult<CommitHash> {
         let commit_hash = self.tvc.init_repository(&BranchName(branch_name)).await?;
         Ok(commit_hash)
+    }
+
+    pub async fn branch_names(&self) -> error::Result<JsVecString> {
+        let branch_names: Vec<String> = self
+            .tvc
+            .branch_names()
+            .await?
+            .into_iter()
+            .map(|b| b.to_string())
+            .collect();
+        Ok(JsVecString(branch_names))
     }
 
     pub async fn unzip(&self, branch_name: String) -> JsResult {
@@ -156,10 +167,3 @@ impl WasmTvcClient {
     }
 }
 
-
-impl Default for WasmTvcClient {
-    #[inline(always)]
-    fn default() -> Self {
-        Self::new(None)
-    }
-}

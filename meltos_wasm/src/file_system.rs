@@ -1,9 +1,10 @@
+use std::path::Path;
 use async_trait::async_trait;
-use wasm_bindgen::prelude::wasm_bindgen;
-
 use meltos_tvc::file_system::{FileSystem, Stat};
 use meltos_tvc::file_system::memory::MemoryFileSystem;
 use meltos_util::console_log;
+use meltos_util::path::AsUri;
+use wasm_bindgen::prelude::wasm_bindgen;
 
 use crate::error;
 use crate::error::IntoJsResult;
@@ -20,17 +21,20 @@ pub mod vscode_node;
 pub struct WasmFileSystem {
     repository: NodeFileSystem,
     workspace: MemoryFileSystem,
-    vscode: Option<FileChangeEventEmitter>,
+    emitter: Option<FileChangeEventEmitter>,
 }
 
 
 #[wasm_bindgen]
 impl WasmFileSystem {
     #[wasm_bindgen(constructor)]
-    pub fn new(vscode: Option<FileChangeEventEmitter>) -> Self {
+    pub fn new(
+        emitter: Option<FileChangeEventEmitter>,
+    ) -> Self {
         Self {
-            vscode,
-            ..Self::default()
+            emitter,
+            repository: NodeFileSystem::default(),
+            workspace: MemoryFileSystem::default(),
         }
     }
 
@@ -94,8 +98,16 @@ impl FileSystem for WasmFileSystem {
     #[inline(always)]
     async fn write_file(&self, path: &str, buf: &[u8]) -> std::io::Result<()> {
         console_log!("path = {path}");
+        let fs = self.fs(path);
+        if let Some(parent) = Path::new(path).parent().map(|path|path.as_uri()){
+            if fs.read_dir(&parent).await?.is_none(){
+                fs.create_dir(&parent).await?;
+                self.notify(&parent, CREATE);
+            }
+        }
         let exists = self.exists(path).await?;
-        self.fs(path).write_file(path, buf).await?;
+
+        fs.write_file(path, buf).await?;
         self.notify(path, if exists { CHANGE } else { CREATE });
         Ok(())
     }
@@ -115,7 +127,9 @@ impl FileSystem for WasmFileSystem {
 
     #[inline(always)]
     async fn read_dir(&self, path: &str) -> std::io::Result<Option<Vec<String>>> {
+        console_log!("read_dir path: {path}");
         if path == "." {
+
             let entries = self.workspace.read_dir(".").await?;
             let entries2 = self.repository.read_dir(".").await?;
             if entries.is_none() && entries2.is_none() {
@@ -123,6 +137,7 @@ impl FileSystem for WasmFileSystem {
             }
             let mut e = entries.unwrap_or_default();
             e.extend(entries2.unwrap_or_default());
+            console_log!("entries = {:#?}", self.workspace.0);
             Ok(Some(e))
         } else {
             self.fs(path).read_dir(path).await
@@ -154,19 +169,6 @@ impl FileSystem for WasmFileSystem {
 }
 
 
-impl Default for WasmFileSystem {
-    #[inline(always)]
-    fn default() -> Self {
-        Self {
-            //TODO: Repository URI
-            repository: NodeFileSystem::default(),
-            workspace: MemoryFileSystem::default(),
-            vscode: None,
-        }
-    }
-}
-
-
 impl WasmFileSystem {
     fn fs(&self, path: &str) -> &dyn FileSystem {
         if path.starts_with("workspace") || path.starts_with("/workspace") {
@@ -181,8 +183,13 @@ impl WasmFileSystem {
         Ok(self.stat(uri).await?.is_some())
     }
 
+
+
     fn notify(&self, uri: &str, change_type: &str) {
-        if let Some(vscode) = self.vscode.as_ref() {
+        // if !(uri.starts_with("workspace") || uri.starts_with("/workspace")) {
+        //     return;
+        // }
+        if let Some(vscode) = self.emitter.as_ref() {
             vscode.notify(uri, change_type);
         }
     }

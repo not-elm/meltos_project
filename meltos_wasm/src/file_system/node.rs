@@ -38,7 +38,7 @@ impl NodeFileSystem {
         } else if path.starts_with(&self.workspace_folder) {
             path.to_string()
         } else {
-            format!("{}/{}", self.workspace_folder, path.replace("", ""))
+            Path::new(&self.workspace_folder).join(path).as_uri()
         }
     }
 }

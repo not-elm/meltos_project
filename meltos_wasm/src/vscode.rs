@@ -7,6 +7,7 @@ extern {
 
     #[wasm_bindgen(method)]
     pub fn notify(this: &FileChangeEventEmitter, uri: &str, change_type: &str);
+
 }
 
 pub const CREATE: &str = "create";
