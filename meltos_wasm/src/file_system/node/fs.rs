@@ -55,7 +55,6 @@ pub fn exists_sync(path: &str) -> std::io::Result<bool> {
 }
 
 pub fn read_dir_sync(path: &str) -> std::io::Result<Option<Vec<String>>> {
-    console_log!("read_dir_sync: {path}");
     if !exists_sync(path)? {
         return Ok(None);
     }

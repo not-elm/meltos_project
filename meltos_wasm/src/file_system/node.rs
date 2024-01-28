@@ -52,7 +52,7 @@ impl Default for NodeFileSystem {
                 recursive: true
             }).unwrap();
         }
-        console_log!("home dir = {dir}");
+
         Self {
             workspace_folder: dir
         }

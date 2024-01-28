@@ -1,4 +1,5 @@
 use std::path::Path;
+
 use async_trait::async_trait;
 use meltos_tvc::file_system::{FileSystem, Stat};
 use meltos_tvc::file_system::memory::MemoryFileSystem;
@@ -97,10 +98,9 @@ impl FileSystem for WasmFileSystem {
 
     #[inline(always)]
     async fn write_file(&self, path: &str, buf: &[u8]) -> std::io::Result<()> {
-        console_log!("path = {path}");
         let fs = self.fs(path);
-        if let Some(parent) = Path::new(path).parent().map(|path|path.as_uri()){
-            if fs.read_dir(&parent).await?.is_none(){
+        if let Some(parent) = Path::new(path).parent().map(|path| path.as_uri()) {
+            if fs.read_dir(&parent).await?.is_none() {
                 fs.create_dir(&parent).await?;
                 self.notify(&parent, CREATE);
             }
@@ -127,9 +127,7 @@ impl FileSystem for WasmFileSystem {
 
     #[inline(always)]
     async fn read_dir(&self, path: &str) -> std::io::Result<Option<Vec<String>>> {
-        console_log!("read_dir path: {path}");
         if path == "." {
-
             let entries = self.workspace.read_dir(".").await?;
             let entries2 = self.repository.read_dir(".").await?;
             if entries.is_none() && entries2.is_none() {
@@ -137,7 +135,7 @@ impl FileSystem for WasmFileSystem {
             }
             let mut e = entries.unwrap_or_default();
             e.extend(entries2.unwrap_or_default());
-            console_log!("entries = {:#?}", self.workspace.0);
+
             Ok(Some(e))
         } else {
             self.fs(path).read_dir(path).await
@@ -182,7 +180,6 @@ impl WasmFileSystem {
     async fn exists(&self, uri: &str) -> std::io::Result<bool> {
         Ok(self.stat(uri).await?.is_some())
     }
-
 
 
     fn notify(&self, uri: &str, change_type: &str) {
