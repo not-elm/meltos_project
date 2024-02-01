@@ -2,7 +2,6 @@ use std::path::Path;
 
 use async_trait::async_trait;
 use meltos_tvc::file_system::{FileSystem, Stat, StatType};
-use meltos_util::console_log;
 use meltos_util::path::AsUri;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -46,7 +45,7 @@ impl NodeFileSystem {
 
 impl Default for NodeFileSystem {
     fn default() -> Self {
-        let dir = format!("{}/meltos", home_dir());
+        let dir = Path::new(&home_dir()).as_uri();
         if !exists_sync(&dir).unwrap() {
             mkdir_sync(&dir, MkdirOptions {
                 recursive: true
@@ -177,6 +176,10 @@ impl FileSystem for NodeFileSystem {
     #[inline(always)]
     async fn delete(&self, path: &str) -> std::io::Result<()> {
         let entry_path = self.path(path);
+        if !exists_sync(&entry_path)? {
+            return Ok(());
+        }
+
         rm_recursive(entry_path)
     }
 }

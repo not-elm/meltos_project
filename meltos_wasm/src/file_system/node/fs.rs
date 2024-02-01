@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use meltos_util::console_log;
 use wasm_bindgen::JsValue;
 use wasm_bindgen::prelude::wasm_bindgen;
 
@@ -7,12 +6,11 @@ use crate::file_system::node::error::NodeFsResult;
 use crate::file_system::node::MkdirOptions;
 use crate::file_system::node::stats::Stats;
 
-
 #[wasm_bindgen]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-struct RmOptions{
+struct RmOptions {
     pub recursive: bool,
-    pub force: bool
+    pub force: bool,
 }
 
 #[wasm_bindgen(module = "fs")]
@@ -69,9 +67,9 @@ pub fn read_dir_sync(path: &str) -> std::io::Result<Option<Vec<String>>> {
 
 #[inline(always)]
 pub fn rm_sync(path: &str) -> std::io::Result<()> {
-    _rm_sync(path, RmOptions{
+    _rm_sync(path, RmOptions {
         recursive: true,
-        force: true
+        force: true,
     }).map_err(|e| std::io::Error::other(format!("failed fs.rmSync : {e:?}")))?;
     Ok(())
 }
@@ -98,10 +96,10 @@ pub fn is_file(path: &str) -> std::io::Result<bool> {
 pub fn rm_recursive(path: String) -> std::io::Result<()> {
     if !exists_sync(&path)? {
         Ok(())
-    } else if is_file(&path)?{
+    } else if is_file(&path)? {
         rm_sync(&path)
-    }else{
-        for entry in read_dir_sync(&path)?.unwrap_or_default(){
+    } else {
+        for entry in read_dir_sync(&path)?.unwrap_or_default() {
             rm_recursive(format!("{path}/{entry}"))?;
         }
         rm_dir_sync(&path)

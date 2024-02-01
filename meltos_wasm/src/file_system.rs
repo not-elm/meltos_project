@@ -3,7 +3,6 @@ use std::path::Path;
 use async_trait::async_trait;
 use meltos_tvc::file_system::{FileSystem, Stat};
 use meltos_tvc::file_system::memory::MemoryFileSystem;
-use meltos_util::console_log;
 use meltos_util::path::AsUri;
 use wasm_bindgen::prelude::wasm_bindgen;
 
