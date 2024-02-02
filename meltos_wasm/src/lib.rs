@@ -7,6 +7,7 @@ mod js_vec;
 mod vscode;
 mod directory;
 mod sleep;
+mod discussion;
 
 #[cfg(test)]
 pub mod tests {

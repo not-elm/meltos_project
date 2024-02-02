@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "index": "ts-node index.ts",
+    "c": "ts-node client.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "@types/ws": "^8.5.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}

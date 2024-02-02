@@ -2,6 +2,7 @@ use std::path::Path;
 
 use async_trait::async_trait;
 use meltos_tvc::file_system::{FileSystem, Stat, StatType};
+use meltos_util::console_log;
 use meltos_util::path::AsUri;
 use wasm_bindgen::JsCast;
 use wasm_bindgen::prelude::wasm_bindgen;
@@ -26,12 +27,13 @@ impl NodeFileSystem {
     #[wasm_bindgen(constructor)]
     pub fn new(workspace_folder: String) -> Self {
         Self {
-            workspace_folder,
+            workspace_folder: Path::new(&workspace_folder).as_uri(),
         }
     }
 
     #[inline]
     fn path(&self, path: &str) -> String {
+        console_log!("path: {path} workspace_folder: {}", self.workspace_folder);
         if path == "./" || path == "." {
             self.workspace_folder.clone()
         } else if path.starts_with(&self.workspace_folder) {

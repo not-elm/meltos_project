@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "module": "Node16",
+    "target": "ES2022",
+    "lib": [
+      "DOM",
+      "ES2022"
+    ],
+    "sourceMap": true,
+    "rootDirs": [
+      "src",
+      "../meltos_ts_lib/src",
+      "../meltos/crates/meltos_wasm/src"
+    ],
+    "strict": true
+  },
+  "exclude": [
+    "../meltos_ts_lib/node_modules",
+    "node_modules",
+    "ui"
+  ]
+}
