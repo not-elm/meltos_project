@@ -1,5 +1,5 @@
 import {SessionConfigs} from "./SessionConfigs";
-import {RequestCommand, UserRequest} from "./Plugin";
+import {RequestCommand, RoomCommand, UserRequest} from "./Plugin";
 
 const BASE_URI: string = "http://0.0.0.0:3000";
 
@@ -32,7 +32,7 @@ export class HttpRoomClient {
                 user_id: userId,
             }),
         });
-        const json = await response.json();
+        const json: any = await response.json();
         const configs =  {
             roomId,
             sessionId: json["session_id"],
@@ -47,6 +47,14 @@ export class HttpRoomClient {
             method: "POST",
             ...headers(this.sessionId),
             body: JSON.stringify(request)
+        });
+    };
+
+    readonly command = async (commands: RoomCommand[]) => {
+        await fetch(`${BASE_URI}/room/${this.roomId}/command`, {
+            method: "POST",
+            ...headers(this.sessionId),
+            body: JSON.stringify(commands)
         });
     };
 
@@ -74,14 +82,13 @@ export const httpOpen = async (userId?: string) => {
             user_id: userId,
         }),
     });
-    const json = await response.json();
+    const json: any = await response.json();
     return {
         roomId: json["room_id"],
         sessionId: json["session_id"],
         userId: json["user_id"]
     };
 };
-
 
 const headers = (sessionId: string) => {
     return {

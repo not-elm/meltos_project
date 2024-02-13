@@ -1,42 +1,38 @@
-import {RoomClient} from "./RoomClient";
-import {UserRequest, RoomCommand, RoomCommandPlugin, RoomOwnerPlugin} from "./Plugin";
-import {sleep} from "./sleep";
+import {HttpRoomClient} from "./HttpRoomClient";
+import {RoomChannel} from "./RoomChannel";
+import {RequestCommand, RoomCommandPlugin, RoomOwnerPlugin} from "./Plugin";
+import {SessionConfigs} from "./SessionConfigs";
 
-
-class Echo implements RoomCommandPlugin, RoomOwnerPlugin {
-    async onRequest(request: UserRequest): Promise<RoomCommand | RoomCommand[] | null> {
-        console.log(request)
-        switch (request.data.name) {
-            case "echo":
-                return {
-                    to: [request.from],
-                    name: "echo",
-                    data: request.data
-                };
-            default:
-                return null;
-        }
+export class RoomClient {
+    private constructor(
+        readonly configs: SessionConfigs,
+        private readonly http: HttpRoomClient,
+        private readonly channel: RoomChannel,
+    ) {
     }
 
-    async execute(command: RoomCommand): Promise<void> {
-
-        switch (command.name) {
-            case "echo":
-                console.log(command.data);
-                break;
-            default:
-                break;
-        }
+    static async open(
+        ownerPlugins: RoomOwnerPlugin[],
+        plugins: RoomCommandPlugin[]
+    ) {
+        const http = await HttpRoomClient.open()
+        const channel = await RoomChannel.open(http.configs, ownerPlugins, plugins, async commands => {
+            await http.command(commands)
+        });
+        return new RoomClient(http.configs, http, channel);
     }
+
+    static async join(
+        roomId: string,
+        plugins: RoomCommandPlugin[]
+    ) {
+        const http = await HttpRoomClient.join(roomId)
+        const channel = await RoomChannel.join(http.configs, plugins);
+        return new RoomClient(http.configs, http, channel);
+    }
+
+    async request(req: RequestCommand) {
+        await this.http.request(req)
+    }
+
 }
-
-(async () => {
-    const client = await RoomClient.open(
-        [new Echo()],
-        [new Echo()]
-    );
-    console.log(client.configs);
-
-    await sleep();
-})()
-

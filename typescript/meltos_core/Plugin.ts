@@ -4,12 +4,10 @@ export interface RoomCommand {
     data: any
 }
 
-
 export interface UserRequest {
     from: string
     data: RequestCommand
 }
-
 
 export interface RequestCommand {
     name: string
@@ -20,9 +18,6 @@ export interface RoomOwnerPlugin {
     onRequest(request: UserRequest): Promise<RoomCommand | RoomCommand[] | null>
 }
 
-
 export interface RoomCommandPlugin {
     execute(command: RoomCommand): Promise<void>
 }
-
-
